@@ -24,7 +24,7 @@ class FrequentItemsGenerator:
     self.item_counts.columns = ['item_no', 'count']
     logging.info(f"First pass apriori completed")
     return self.item_counts
-  
+
   def between_passes(self):
     self.support_threshold = len(self.transactions)*self.support
     self.frequent_singletons = self.item_counts[self.item_counts['count'] >= self.support_threshold]
@@ -62,12 +62,9 @@ class FrequentItemsGenerator:
     self.between_passes()
     self.second_pass_apriori()
     self.frequent_singletons = pd.merge(self.frequent_singletons, self.hash_table, on='item_no', how='left')
+    self.frequent_singletons = self.frequent_singletons.drop(columns=['item_no'])
     self.frequent_pairs[['item_no_1', 'item_no_2']] = pd.DataFrame(self.frequent_pairs.reset_index()['index'].tolist(), index = self.frequent_pairs.index)
     self.frequent_pairs.reset_index(drop=True)
     self.frequent_pairs = pd.merge(self.frequent_pairs, self.hash_table, left_on='item_no_1', right_on='item_no', how='left')
     self.frequent_pairs = pd.merge(self.frequent_pairs, self.hash_table, left_on='item_no_2', right_on='item_no', how='left')
-    
-  
-  
-
-
+    self.frequent_pairs = self.frequent_pairs.drop(columns=['item_no_1', 'item_no_2', 'item_no_x', 'item_no_y'])
