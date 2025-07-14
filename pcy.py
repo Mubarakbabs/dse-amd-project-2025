@@ -31,13 +31,13 @@ class PCYItemsGenerator:
     #we don't need new indices for frequent singletons because the indices were created based on sorting the counts in the first place
     logging.info(f"Support threshold is at {self.support_threshold} items")
     logging.info(f"{len(self.frequent_singletons)} frequent singletons identified!")
-    num_buckets = len(self.transactions) // 100
-    buckets = [0] * num_buckets
+    self.num_buckets = len(self.transactions) // 100
+    buckets = [0] * self.num_buckets
     for transaction in self.transactions:
       for i in range(len(transaction)):
           for j in range(i + 1, len(transaction)):
               a, b = sorted([transaction[i], transaction[j]])
-              bucket_idx = hash((a, b)) % num_buckets
+              bucket_idx = hash((a, b)) % self.num_buckets
               buckets[bucket_idx] += 1
     self.bitmap = [1 if count >= self.support_threshold else 0 for count in buckets]
     return self.frequent_singletons, self.support_threshold
@@ -53,14 +53,13 @@ class PCYItemsGenerator:
         continue
       for i in range(len(basket)):
         for j in range(i+1, len(basket)):
-          if self.bitmap[hash((basket[i], basket[j])) % num_buckets] == 1:
+          if self.bitmap[hash((basket[i], basket[j])) % self.num_buckets] == 1:
             if (basket[i], basket[j]) in self.pairs_count:
               self.pairs_count[(basket[i], basket[j])] += 1
             else:
               self.pairs_count[(basket[i], basket[j])] = 1
     for idx in sorted(baskets_to_remove, reverse=True):
       self.transactions.pop(idx)
-    self.triples = [(a, b, count) for (a, b), count in pair_counts.items()]
     self.frequent_pairs = {pair: count for pair, count in self.pairs_count.items() if count > self.support_threshold}
     self.frequent_pairs = pd.DataFrame.from_dict(self.frequent_pairs, orient='index', columns=['count'])
     logging.info(f"Second pass apriori completed")
